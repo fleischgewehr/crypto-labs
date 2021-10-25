@@ -46,7 +46,7 @@ class MtCracker(Cracker):
         generator.random_raw()
         self.generator = generator
 
-    def __iter__(self) -> int:
+    def __iter__(self) -> t.Iterator[int]:
         self.crack()
         for _ in range(10):
             # TODO: to be tested
