@@ -1,0 +1,6 @@
+import typing as t
+
+
+class Cracker(t.Protocol):
+    def crack(self) -> None: ...
+    def __iter__(self) -> int: ...
