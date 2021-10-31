@@ -1,24 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/app"
+	"github.com/fleischgewehr/crypto-labs/passwords/internal/router"
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/server"
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/shutdown"
 )
 
 func main() {
-	http.HandleFunc("/", Handler)
-
 	app, err := app.Get()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	srv := server.Get().WithAddr(":8080")
+	srv := server.Get().WithAddr(":8080").WithRouter(router.Get(app))
 
 	go func() {
 		log.Println("server started at localhost:8080")
@@ -36,8 +33,4 @@ func main() {
 			log.Fatal(err.Error())
 		}
 	})
-}
-
-func Handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Yo")
 }
