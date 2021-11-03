@@ -18,6 +18,11 @@ type argonParams struct {
 	keyLength   uint32
 }
 
+type EncryptedString struct {
+	Ciphertext string
+	Salt       string
+}
+
 func getSecretKey() ([]byte, error) {
 	return []byte("very secret key goes here"), nil
 }
@@ -47,25 +52,26 @@ func getArgonHash(bytes []byte) ([]byte, error) {
 	), nil
 }
 
-func encryptWithAES(bytes []byte) ([]byte, error) {
+func encryptWithAES(bytes []byte) (*EncryptedString, error) {
 	secretKey, err := getSecretKey()
 	if err != nil {
-		return []byte(""), err
+		return &EncryptedString{}, err
 	}
 	block, err := aes.NewCipher(secretKey)
 	if err != nil {
-		return []byte(""), err
+		return &EncryptedString{}, err
 	}
 	aesGCM, err := cipher.NewGCM(block)
 	if err != nil {
-		return []byte(""), err
+		return &EncryptedString{}, err
 	}
 	nonce, err := getRandomBytes(uint32(aesGCM.NonceSize()))
 	if err != nil {
-		return []byte(""), err
+		return &EncryptedString{}, err
 	}
+	ciphertext := aesGCM.Seal(nonce, nonce, bytes, nil)
 
-	return aesGCM.Seal(nonce, nonce, bytes, nil), nil
+	return &EncryptedString{Ciphertext: string(ciphertext), Salt: string(nonce)}, nil
 }
 
 func decryptWithAES(encrypted string) ([]byte, error) {
@@ -92,15 +98,14 @@ func decryptWithAES(encrypted string) ([]byte, error) {
 	return aesGCM.Open(nil, nonce, ciphertext, nil)
 }
 
-func HashPassword(password string) (string, error) {
+func HashPassword(password string) (*EncryptedString, error) {
 	shaHash := getSha512Hash([]byte(password))
 	argonHash, err := getArgonHash(shaHash)
 	if err != nil {
-		return "", err
+		return &EncryptedString{}, err
 	}
-	ciphertext, err := encryptWithAES(argonHash)
 
-	return string(ciphertext), err
+	return encryptWithAES(argonHash)
 }
 
 func CheckPassword(password, hash string) bool {

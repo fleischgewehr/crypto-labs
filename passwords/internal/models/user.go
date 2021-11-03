@@ -19,24 +19,24 @@ func (u *User) Create(ctx context.Context, app *app.Application) error {
 		values(?,?,?)
 		returning id
 	`
-	err := app.DB.Client.
+
+	return app.DB.Client.
 		QueryRowContext(ctx, stmt, u.Username, u.PasswordHash, u.PasswordSalt).
 		Scan(&u.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (u *User) GetById(ctx context.Context, app *app.Application) error {
 	stmt := "select * from users where id = ?"
-	err := app.DB.Client.
+
+	return app.DB.Client.
 		QueryRowContext(ctx, stmt, u.ID).
 		Scan(&u.ID, &u.Username, &u.PasswordHash, &u.PasswordSalt)
-	if err != nil {
-		return err
-	}
+}
 
-	return nil
+func (u *User) GetByUsername(ctx context.Context, app *app.Application) error {
+	stmt := "select * from users where username = ?"
+
+	return app.DB.Client.
+		QueryRowContext(ctx, stmt, u.Username).
+		Scan(&u.ID, &u.Username, &u.PasswordHash, &u.PasswordSalt)
 }

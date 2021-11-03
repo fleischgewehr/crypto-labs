@@ -11,12 +11,27 @@ import (
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/models"
 )
 
+type registrationRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func CreateUser(app *app.Application) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		defer r.Body.Close()
 
-		user := &models.User{}
-		json.NewDecoder(r.Body).Decode(user)
+		registrationReq := &registrationRequest{}
+		json.NewDecoder(r.Body).Decode(registrationReq)
+
+		user := &models.User{Username: registrationReq.Username}
+		cookedPassword, err := HashPassword(registrationReq.Password)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Could not create user")
+			return
+		}
+		user.PasswordHash = cookedPassword.Ciphertext
+		user.PasswordHash = cookedPassword.Salt
 
 		if err := user.Create(r.Context(), app); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -27,5 +42,34 @@ func CreateUser(app *app.Application) httprouter.Handle {
 		w.Header().Set("Content-Type", "application/json")
 		resp, _ := json.Marshal(user)
 		w.Write(resp)
+	}
+}
+
+type loginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func Login(app *app.Application) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		defer r.Body.Close()
+
+		loginReq := &loginRequest{}
+		json.NewDecoder(r.Body).Decode(loginReq)
+
+		user := &models.User{Username: loginReq.Username}
+		if err := user.GetByUsername(r.Context(), app); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "User not found")
+			return
+		}
+
+		if CheckPassword(loginReq.Password, user.PasswordHash) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "Logged in")
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprintf(w, "Invalid username or password")
+		}
 	}
 }
