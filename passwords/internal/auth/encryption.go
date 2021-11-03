@@ -54,15 +54,15 @@ func encryptWithAES(bytes []byte) ([]byte, error) {
 	}
 	block, err := aes.NewCipher(secretKey)
 	if err != nil {
-		return []byte(""), nil
+		return []byte(""), err
 	}
 	aesGCM, err := cipher.NewGCM(block)
 	if err != nil {
-		return []byte(""), nil
+		return []byte(""), err
 	}
 	nonce, err := getRandomBytes(uint32(aesGCM.NonceSize()))
 	if err != nil {
-		return []byte(""), nil
+		return []byte(""), err
 	}
 
 	return aesGCM.Seal(nonce, nonce, bytes, nil), nil
