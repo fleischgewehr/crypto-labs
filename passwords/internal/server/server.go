@@ -44,7 +44,7 @@ func (s *Server) WithRouter(router *httprouter.Router) *Server {
 }
 
 func (s *Server) Start() error {
-	s.srv.Addr = ":8080"
+	s.srv.Addr = "127.0.0.1:8080"
 
 	return s.srv.ListenAndServe()
 }
