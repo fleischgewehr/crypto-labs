@@ -1,9 +1,18 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
+)
+
+type key int
+
+const (
+	requestIDKey key = 0
 )
 
 type Server struct {
@@ -23,7 +32,12 @@ func (s *Server) WithAddr(host string) *Server {
 }
 
 func (s *Server) WithRouter(router *httprouter.Router) *Server {
-	s.srv.Handler = router
+	// FIXME: this is bad
+	nextRequestID := func() string {
+		return fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+
+	s.srv.Handler = tracing(nextRequestID)(logging()(router))
 
 	return s
 }
@@ -36,4 +50,33 @@ func (s *Server) Start() error {
 
 func (s *Server) Close() error {
 	return s.srv.Close()
+}
+
+func logging() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				requestID, ok := r.Context().Value(requestIDKey).(string)
+				if !ok {
+					requestID = "unknown"
+				}
+				fmt.Println(requestID, r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+			}()
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestID := r.Header.Get("X-Request-Id")
+			if requestID == "" {
+				requestID = nextRequestID()
+			}
+			ctx := context.WithValue(r.Context(), requestIDKey, requestID)
+			w.Header().Set("X-Request-Id", requestID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
