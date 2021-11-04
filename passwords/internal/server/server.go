@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 )
 
 type key int
@@ -37,7 +38,7 @@ func (s *Server) WithRouter(router *httprouter.Router) *Server {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
 	}
 
-	s.srv.Handler = tracing(nextRequestID)(logging()(router))
+	s.srv.Handler = cors.Default().Handler(tracing(nextRequestID)(logging()(router)))
 
 	return s
 }
