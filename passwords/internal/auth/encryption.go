@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/hex"
+	"os"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -24,7 +25,7 @@ type EncryptedString struct {
 }
 
 func getSecretKey() ([]byte, error) {
-	return []byte("very secret key goes here"), nil
+	return []byte(os.Getenv("AES_SECRET_KEY")), nil
 }
 
 func getSha512Hash(password []byte) []byte {

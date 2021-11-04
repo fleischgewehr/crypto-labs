@@ -1,0 +1,13 @@
+name: Set environment variables
+
+on: [push]
+
+jobs:
+  setter:
+    runs-on: ubuntu-latest
+    env:
+      AES_SECRET_KEY: ${{ secrets.AES_SECRET_KEY }}
+
+    steps:
+      - name: secret keys go brrr
+        run: echo "keys are set"
