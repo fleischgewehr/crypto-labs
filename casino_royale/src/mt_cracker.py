@@ -3,15 +3,14 @@ import functools
 import time
 import typing as t
 
-from numpy.random import Generator, MT19937
-
 from src.cracker import Cracker
+from src.mt import MT19937
 
 
 class MtCracker(Cracker):
     registration_date: dt.datetime
     initial_value: int
-    generator: Generator
+    generator: MT19937
 
     def __init__(self, registration_date: dt.datetime, initial_value: int) -> None:
         self.registration_date = registration_date
@@ -19,9 +18,9 @@ class MtCracker(Cracker):
 
     @staticmethod
     def find_seed(seed: int, initial_value: int) -> bool:
-        generator = Generator(MT19937(seed))
+        generator = iter(MT19937(seed))
 
-        return generator.random_raw() == initial_value
+        return next(generator) == initial_value
 
     @staticmethod
     def search(
@@ -41,13 +40,15 @@ class MtCracker(Cracker):
         seed = self.search(from_, to, oracle)
         assert seed is not None, 'Unable to find seed'
 
-        generator = Generator(MT19937(seed))
+        generator = iter(MT19937(seed))
         # skip already checked initial value
-        generator.random_raw()
+        next(generator)
         self.generator = generator
 
     def __iter__(self) -> t.Iterator[int]:
         self.crack()
-        for _ in range(10):
+        for idx, value in enumerate(self.generator):
+            if idx == 10:
+                break
             # TODO: to be tested
-            yield self.generator.random_raw()
+            yield value

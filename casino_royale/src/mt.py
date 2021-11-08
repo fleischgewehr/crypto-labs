@@ -1,7 +1,7 @@
 import typing as typ
 
 
-class MT19337:
+class MT19937:
     """https://en.wikipedia.org/wiki/Mersenne_Twister"""
 
     # 32 bit implementation (word size)
