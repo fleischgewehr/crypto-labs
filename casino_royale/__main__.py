@@ -3,6 +3,7 @@ import random
 
 from dateutil import parser
 
+from src.better_mt_cracker import BetterMtCracker
 from src.client import TriToporaClient
 from src.misc import Gamemode
 from src.mt_cracker import MtCracker
@@ -29,7 +30,17 @@ def rob_mt_casino(client: TriToporaClient) -> None:
     print(f'Balance after MT robbery: {balance}')
 
 
+def rob_better_mt_casino(client: TriToporaClient) -> None:
+    client.create_account()
+    for _ in range(624):
+        client.play(Gamemode.better_mt, save_results=True)
+    cracker = BetterMtCracker(client.results)
+    balance = client.rob_casino(cracker, Gamemode.better_mt)
+    print(f'Balance after BetterMT robbery: {balance}')
+
+
 if __name__ == '__main__':
     client = TriToporaClient(id=random.randint(1, 100_000), host='95.217.177.249')
-    rob_lcg_casino(client)
+    # rob_lcg_casino(client)
     # rob_mt_casino(client)
+    rob_better_mt_casino(client)
