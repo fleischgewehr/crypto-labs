@@ -2,6 +2,7 @@ import typing as t
 
 import requests
 
+from src.cracker import Cracker
 from src.misc import Gamemode
 
 
@@ -34,3 +35,10 @@ class TriToporaClient:
             self.balance = balance
 
         return resp
+
+    def rob_casino(self, cracker: Cracker, mode: Gamemode) -> int:
+        try:
+            for number in cracker:
+                print(self.play(mode=mode, number=number, bet=100))
+        except KeyboardInterrupt:
+            return self.balance

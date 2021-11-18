@@ -32,11 +32,11 @@ class MtCracker(Cracker):
                 return candidate
 
     def crack(self) -> None:
-        delta = 16_000
-        from_ = int(time.mktime(self.registration_date.timetuple()))
+        delta = 30_000
+        from_ = int(time.mktime(self.registration_date.timetuple())) - delta
         to = from_ + delta * 2
-        oracle = functools.partial(self.find_seed, initial_value=self.initial_value)
 
+        oracle = functools.partial(self.find_seed, initial_value=self.initial_value)
         seed = self.search(from_, to, oracle)
         assert seed is not None, 'Unable to find seed'
 
@@ -47,8 +47,5 @@ class MtCracker(Cracker):
 
     def __iter__(self) -> t.Iterator[int]:
         self.crack()
-        for idx, value in enumerate(self.generator):
-            if idx == 10:
-                break
-            # TODO: to be tested
+        for value in self.generator:
             yield value
