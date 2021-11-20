@@ -6,17 +6,14 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"gopkg.in/validator.v2"
 
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/app"
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/models"
 )
 
 type registrationRequest struct {
-	// Any string from 3 to 16 symbols
-	Username string `json:"username" validate:"min=3,max=16"`
-	// Any string with len >= 8 and containing at least one digit, lower/upper case char & punctuation
-	Password string `json:"password" validate:"min=10,regexp=(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func CreateUser(app *app.Application) httprouter.Handle {
@@ -26,10 +23,9 @@ func CreateUser(app *app.Application) httprouter.Handle {
 		registrationReq := &registrationRequest{}
 		json.NewDecoder(r.Body).Decode(registrationReq)
 
-		if err := validator.Validate(registrationReq); err != nil {
+		if err := validatePassword(registrationReq.Password); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Println(err.Error())
-			fmt.Fprintf(w, "Validation error: %q", err.Error())
+			fmt.Fprintf(w, "Validation errror: %q", err.Error())
 			return
 		}
 
