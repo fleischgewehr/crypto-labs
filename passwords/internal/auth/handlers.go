@@ -27,11 +27,11 @@ func CreateUser(app *app.Application) httprouter.Handle {
 		cookedPassword, err := HashPassword(registrationReq.Password)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Could not create user")
+			fmt.Fprintf(w, "An error occurred while creating the user")
 			return
 		}
-		user.PasswordHash = cookedPassword.Ciphertext
-		user.PasswordHash = cookedPassword.Salt
+		user.PasswordHash = cookedPassword.Hash
+		user.PasswordSalt = cookedPassword.ArgonSalt
 
 		if err := user.Create(r.Context(), app); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -64,12 +64,13 @@ func Login(app *app.Application) httprouter.Handle {
 			return
 		}
 
-		if CheckPassword(loginReq.Password, user.PasswordHash) {
+		stored := &CookedPassword{Hash: user.PasswordHash, ArgonSalt: user.PasswordSalt}
+		if CheckPassword(loginReq.Password, stored) {
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintf(w, "Logged in")
 		} else {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, "Invalid username or password")
+			fmt.Fprintf(w, "Invalid login or password")
 		}
 	}
 }
