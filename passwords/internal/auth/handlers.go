@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 
@@ -78,12 +79,18 @@ func Login(app *app.Application) httprouter.Handle {
 		if CheckPassword(loginReq.Password, stored) {
 			w.WriteHeader(http.StatusOK)
 		} else {
+			w.WriteHeader(http.StatusForbidden)
+			time.Sleep(2 * time.Second)
 			if err := HandleInvalidPassword(app, user.Username); err != nil {
-				w.WriteHeader(http.StatusForbidden)
 				fmt.Fprintf(w, "Error: %q", err.Error())
 				return
 			}
-			w.WriteHeader(http.StatusForbidden)
+			if user.InvalidLoginCount > 40 {
+				user.BlockAccount(r.Context(), app)
+				fmt.Fprintf(w, "Your account has been blocked")
+				return
+			}
+			user.UpsertInvalidLoginCount(r.Context(), app)
 			fmt.Fprintf(w, "Invalid login or password")
 		}
 	}
