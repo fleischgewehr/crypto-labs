@@ -15,8 +15,8 @@ import (
 type registrationRequest struct {
 	// Any string from 3 to 16 symbols
 	Username string `json:"username" validate:"min=3,max=16"`
-	// Any string with len >= 8 and containing at least one digit
-	Password string `json:"password" validate:"min=8,regexp=.*[0-9].*"`
+	// Any string with len >= 8 and containing at least one digit, lower/upper case char & punctuation
+	Password string `json:"password" validate:"min=10,regexp=(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)"`
 }
 
 func CreateUser(app *app.Application) httprouter.Handle {
