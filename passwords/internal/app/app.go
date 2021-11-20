@@ -1,11 +1,13 @@
 package app
 
 import (
+	"github.com/fleischgewehr/crypto-labs/passwords/internal/cache"
 	"github.com/fleischgewehr/crypto-labs/passwords/internal/db"
 )
 
 type Application struct {
-	DB *db.DB
+	DB    *db.DB
+	Cache *cache.Cache
 }
 
 func Get() (*Application, error) {
@@ -13,8 +15,13 @@ func Get() (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	cache, err := cache.Get()
+	if err != nil {
+		return nil, err
+	}
 
 	return &Application{
-		DB: db,
+		DB:    db,
+		Cache: cache,
 	}, nil
 }

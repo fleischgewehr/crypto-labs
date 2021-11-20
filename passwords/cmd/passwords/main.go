@@ -32,5 +32,6 @@ func main() {
 		if err := app.DB.Close(); err != nil {
 			log.Fatal(err.Error())
 		}
+		app.Cache.Close()
 	})
 }

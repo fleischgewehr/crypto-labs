@@ -78,6 +78,11 @@ func Login(app *app.Application) httprouter.Handle {
 		if CheckPassword(loginReq.Password, stored) {
 			w.WriteHeader(http.StatusOK)
 		} else {
+			if err := HandleInvalidPassword(app, user.Username); err != nil {
+				w.WriteHeader(http.StatusForbidden)
+				fmt.Fprintf(w, "Error: %q", err.Error())
+				return
+			}
 			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprintf(w, "Invalid login or password")
 		}
