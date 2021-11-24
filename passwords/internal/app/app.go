@@ -15,13 +15,13 @@ func Get() (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	cache, err := cache.Get()
-	if err != nil {
-		return nil, err
-	}
+	// cache, err := cache.Get()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &Application{
 		DB:    db,
-		Cache: cache,
+		Cache: nil,
 	}, nil
 }

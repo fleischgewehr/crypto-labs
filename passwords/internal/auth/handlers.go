@@ -81,10 +81,10 @@ func Login(app *app.Application) httprouter.Handle {
 		} else {
 			w.WriteHeader(http.StatusForbidden)
 			time.Sleep(2 * time.Second)
-			if err := HandleInvalidPassword(app, user.Username); err != nil {
-				fmt.Fprintf(w, "Error: %q", err.Error())
-				return
-			}
+			// if err := HandleInvalidPassword(app, user.Username); err != nil {
+			// 	fmt.Fprintf(w, "Error: %q", err.Error())
+			// 	return
+			// }
 			if user.InvalidLoginCount > 40 {
 				user.BlockAccount(r.Context(), app)
 				fmt.Fprintf(w, "Your account has been blocked")
