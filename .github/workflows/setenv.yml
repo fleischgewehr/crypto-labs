@@ -6,7 +6,8 @@ jobs:
   setter:
     runs-on: ubuntu-latest
     env:
-      AES_SECRET_KEY: ${{ secrets.AES_SECRET_KEY }}
+      AES_PHONE_SECRET_KEY: ${{ secrets.AES_PHONE_SECRET_KEY }}
+      AES_ADDRESS_SECRET_KEY: ${{ secrets.AES_ADDRESS_SECRET_KEY }}
 
     steps:
       - name: secret keys go brrr

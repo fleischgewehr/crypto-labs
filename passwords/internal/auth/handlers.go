@@ -15,6 +15,8 @@ import (
 type registrationRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Phone    string `json:"phone"`
+	Address  string `json:"address"`
 }
 
 func CreateUser(app *app.Application) httprouter.Handle {
@@ -46,6 +48,13 @@ func CreateUser(app *app.Application) httprouter.Handle {
 		user.PasswordHash = cookedPassword.Hash
 		user.PasswordSalt = cookedPassword.ArgonSalt
 
+		phone, _ := EncryptPhone(registrationReq.Phone)
+		user.Phone = phone.Cipher
+		user.PhoneSalt = phone.Salt
+		address, _ := EncryptAddress(registrationReq.Address)
+		user.Address = address.Cipher
+		user.AddressSalt = address.Salt
+
 		if err := user.Create(r.Context(), app); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Could not create user: %q", err.Error())
@@ -71,6 +80,7 @@ func Login(app *app.Application) httprouter.Handle {
 		user := &models.User{Username: loginReq.Username}
 		if err := user.GetByUsername(r.Context(), app); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Println(err.Error())
 			fmt.Fprintf(w, "Invalid login or password")
 			return
 		}

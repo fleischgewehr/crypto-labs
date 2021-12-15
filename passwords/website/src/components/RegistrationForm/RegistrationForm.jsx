@@ -5,12 +5,14 @@ import { register } from '../../api/auth';
 const RegistrationForm = () => {
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
+    const [phone, setPhone] = useState();
+    const [address, setAddress] = useState();
     const [err, setErr] = useState();
 
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await register(username, password);
+            await register(username, password, phone, address);
         } catch (err) {
             setErr(err.response.data);
             return;
@@ -39,6 +41,14 @@ const RegistrationForm = () => {
                 <label>
                     <p>Password</p>
                     <input type="password" onChange={onChangePassword}/>
+                </label>
+                <label>
+                    <p>Phone number</p>
+                    <input type="text" onChange={(e) => setPhone(e.target.value)}/>
+                </label>
+                <label>
+                    <p>Address</p>
+                    <input type="text" onChange={(e) => setAddress(e.target.value)}/>
                 </label>
                 <div>
                     <button type="submit">Submit</button>

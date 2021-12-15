@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/hex"
@@ -20,6 +22,11 @@ type argonParams struct {
 type CookedPassword struct {
 	Hash      string
 	ArgonSalt string
+}
+
+type CookedCipher struct {
+	Cipher string
+	Salt   string
 }
 
 func getSha512Hash(password []byte) []byte {
@@ -71,4 +78,85 @@ func getRandomBytes(n uint32) ([]byte, error) {
 	_, err := io.ReadFull(rand.Reader, buf)
 
 	return buf, err
+}
+
+func encryptWithAESGCM(plain, secret string) (*CookedCipher, error) {
+	key := []byte(secret)
+	bytes := []byte(plain)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return &CookedCipher{}, err
+	}
+
+	nonce, err := getRandomBytes(12)
+	if err != nil {
+		return &CookedCipher{}, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return &CookedCipher{}, err
+	}
+	cipher := aesgcm.Seal(nil, nonce, bytes, nil)
+
+	return &CookedCipher{
+		Cipher: hex.EncodeToString(cipher),
+		Salt:   hex.EncodeToString(nonce),
+	}, nil
+}
+
+func getPhoneSecret() string {
+	// return os.Getenv("AES_PHONE_SECRET_KEY")
+	return "AES256Key-32Characters1234567890"
+}
+
+func getAddressSecret() string {
+	// return os.Getenv("AES_ADDRESS_SECRET_KEY")
+	return "AES256Key-32Characters1234567890"
+}
+
+func EncryptPhone(phone string) (*CookedCipher, error) {
+	secret := getPhoneSecret()
+
+	return encryptWithAESGCM(phone, secret)
+}
+
+func EncryptAddress(address string) (*CookedCipher, error) {
+	secret := getAddressSecret()
+
+	return encryptWithAESGCM(address, secret)
+}
+
+func decryptAESGCM(ciphertext *CookedCipher, secret string) (string, error) {
+	bytes, _ := hex.DecodeString(ciphertext.Cipher)
+	nonce, _ := hex.DecodeString(ciphertext.Salt)
+	key := []byte(secret)
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	plaintext, err := aesgcm.Open(nil, nonce, bytes, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plaintext), nil
+}
+
+func DecryptPhone(ciphertext *CookedCipher) (string, error) {
+	secret := getPhoneSecret()
+
+	return decryptAESGCM(ciphertext, secret)
+}
+
+func DecryptAddress(ciphertext *CookedCipher) (string, error) {
+	secret := getAddressSecret()
+
+	return decryptAESGCM(ciphertext, secret)
 }
