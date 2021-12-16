@@ -12,6 +12,7 @@ func Get(app *app.Application) *httprouter.Router {
 
 	mux.POST("/users", auth.CreateUser(app))
 	mux.POST("/users/login", auth.Login(app))
+	mux.GET("/users/:id", auth.GetProfile(app))
 
 	return mux
 }

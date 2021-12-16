@@ -30,9 +30,9 @@ const Profile = () => {
 
     return (
         <>
-            <h1>{data.username} profile</h1>
-            <p>Phone number: {data.phone}</p>
-            <p>Address: {data.address}</p>
+            <h1>{data.data.username} profile</h1>
+            <p>Phone number: {data.data.phone}</p>
+            <p>Address: {data.data.address}</p>
         </>
     );
 }

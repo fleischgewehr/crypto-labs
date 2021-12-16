@@ -42,11 +42,14 @@ func (u *User) Create(ctx context.Context, app *app.Application) error {
 }
 
 func (u *User) GetById(ctx context.Context, app *app.Application) error {
-	stmt := "select * from users where id = ?"
+	stmt := `
+		select username, phone, phone_salt, address, address_salt
+		from users where id = ?
+	`
 
 	return app.DB.Client.
 		QueryRowContext(ctx, stmt, u.ID).
-		Scan(&u.ID, &u.Username, &u.PasswordHash, &u.PasswordSalt)
+		Scan(&u.Username, &u.Phone, &u.PhoneSalt, &u.Address, &u.AddressSalt)
 }
 
 func (u *User) GetByUsername(ctx context.Context, app *app.Application) error {

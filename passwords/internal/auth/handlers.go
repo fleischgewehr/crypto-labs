@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -80,7 +81,6 @@ func Login(app *app.Application) httprouter.Handle {
 		user := &models.User{Username: loginReq.Username}
 		if err := user.GetByUsername(r.Context(), app); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Println(err.Error())
 			fmt.Fprintf(w, "Invalid login or password")
 			return
 		}
@@ -103,5 +103,47 @@ func Login(app *app.Application) httprouter.Handle {
 			user.UpsertInvalidLoginCount(r.Context(), app)
 			fmt.Fprintf(w, "Invalid login or password")
 		}
+	}
+}
+
+type profileResponse struct {
+	Username string `json:"username"`
+	Phone    string `json:"phone"`
+	Address  string `json:"address"`
+}
+
+func GetProfile(app *app.Application) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		defer r.Body.Close()
+
+		id, err := strconv.Atoi(p.ByName("id"))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "invalid ID")
+			return
+		}
+		user := &models.User{ID: id}
+		if err := user.GetById(r.Context(), app); err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, err.Error())
+			return
+		}
+
+		encryptedPhone := &CookedCipher{Cipher: user.Phone, Salt: user.PhoneSalt}
+		phone, err := DecryptPhone(encryptedPhone)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, err.Error())
+		}
+		encryptedAddress := &CookedCipher{Cipher: user.Address, Salt: user.AddressSalt}
+		address, err := DecryptAddress(encryptedAddress)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, err.Error())
+		}
+		resp := &profileResponse{Username: user.Username, Phone: phone, Address: address}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 	}
 }
