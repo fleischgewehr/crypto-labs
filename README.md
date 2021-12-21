@@ -7,3 +7,5 @@
 ## 3. **[Casino Royale](https://github.com/fleischgewehr/crypto-labs/tree/master/casino_royale)**
 
 ## 5/6. **[Password storage](https://github.com/fleischgewehr/crypto-labs/tree/master/passwords)**
+
+## 7. **[TLS configuration](https://github.com/fleischgewehr/crypto-labs/tree/master/tls)**
